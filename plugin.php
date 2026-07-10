@@ -290,10 +290,10 @@ HTML;
             try {
                 $wb = new Parser( $log->user_agent );
                 if ( $wb->browser->name ) {
-                    $browser_desc = $wb->browser->name . ' ' . $wb->browser->version;
+                    $browser_desc = $wb->browser->toString();
                 }
                 if ( $wb->os->name ) {
-                    $os_desc = $wb->os->name . ' ' . $wb->os->version;
+                    $os_desc = $wb->os->toString();
                 }
                 if ( $wb->device->type ) {
                     $device_type = ucfirst( $wb->device->type );
