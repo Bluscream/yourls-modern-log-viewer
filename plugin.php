@@ -22,8 +22,27 @@ function mlv_admin_init() {
 // Hook into plugin activation to trigger database download
 yourls_add_action( 'activated_modern-log-viewer/plugin.php', 'mlv_download_db' );
 
+function mlv_get_db_path() {
+    $local_path = __DIR__ . '/GeoLite2-City.mmdb';
+    if ( file_exists( $local_path ) ) {
+        return $local_path;
+    }
+    
+    $tmp_path = sys_get_temp_dir() . '/GeoLite2-City.mmdb';
+    if ( file_exists( $tmp_path ) ) {
+        return $tmp_path;
+    }
+    
+    // If neither exists, determine where we have permission to write
+    if ( is_writable( __DIR__ ) ) {
+        return $local_path;
+    }
+    
+    return $tmp_path;
+}
+
 function mlv_download_db() {
-    $db_path = __DIR__ . '/GeoLite2-City.mmdb';
+    $db_path = mlv_get_db_path();
     $temp_path = $db_path . '.tmp';
     
     $primary_url = 'https://github.com/merkez/maxmind-databases/releases/latest/download/GeoLite2-City.mmdb';
@@ -51,6 +70,7 @@ function mlv_curl_download( $url, $temp_path ) {
     $fp = fopen( $temp_path, 'w+' );
     if ( !$fp ) {
         error_log( "Modern Log Viewer: Cannot open file for writing: " . $temp_path . ". Check directory permissions." );
+        yourls_update_option( 'mlv_last_error', "Cannot write to file path: $temp_path. Check folder permissions." );
         return false;
     }
     
@@ -79,7 +99,7 @@ function mlv_curl_download( $url, $temp_path ) {
 
 // Display the log page
 function mlv_display_log_page() {
-    $db_path = __DIR__ . '/GeoLite2-City.mmdb';
+    $db_path = mlv_get_db_path();
     
     // Check if user manually triggered a DB update
     if ( isset( $_POST['mlv_update_db'] ) ) {
