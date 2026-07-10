@@ -71,7 +71,9 @@ function mlv_curl_download( $url, $temp_path ) {
         return true;
     }
     
-    error_log( "Modern Log Viewer: Download from $url failed. cURL Success: " . ($success ? 'Yes' : 'No') . ", cURL Error: " . $curl_error . ", Temp File Size: " . (file_exists($temp_path) ? filesize($temp_path) : 'none') );
+    $err_msg = "Download from $url failed. cURL Success: " . ($success ? 'Yes' : 'No') . ", cURL Error: " . $curl_error . ", Temp File Size: " . (file_exists($temp_path) ? filesize($temp_path) : 'none');
+    error_log( "Modern Log Viewer: " . $err_msg );
+    yourls_update_option( 'mlv_last_error', $err_msg );
     return false;
 }
 
@@ -82,10 +84,12 @@ function mlv_display_log_page() {
     // Check if user manually triggered a DB update
     if ( isset( $_POST['mlv_update_db'] ) ) {
         yourls_verify_nonce( 'mlv_db_nonce' );
+        yourls_delete_option( 'mlv_last_error' );
         if ( mlv_download_db() ) {
             echo '<div class="updated"><p>GeoLite2 City database updated successfully!</p></div>';
         } else {
-            echo '<div class="error"><p>Failed to download GeoLite2 database. Please try again later.</p></div>';
+            $last_err = yourls_get_option( 'mlv_last_error', 'Unknown error.' );
+            echo '<div class="error"><p>Failed to download GeoLite2 database: ' . htmlspecialchars($last_err) . '</p></div>';
         }
     }
 
