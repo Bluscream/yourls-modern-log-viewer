@@ -160,7 +160,13 @@ function mlv_display_log_page() {
     $offset = ( $page - 1 ) * $per_page;
 
     // Fetch click logs
-    $sql = "SELECT * FROM `$table_log` $where ORDER BY click_id DESC LIMIT $per_page OFFSET $offset";
+    $table_url = YOURLS_DB_TABLE_URL;
+    $sql = "SELECT log.*, url.url AS long_url, url.title AS url_title 
+            FROM `$table_log` log 
+            LEFT JOIN `$table_url` url ON log.shorturl = url.keyword 
+            $where 
+            ORDER BY log.click_id DESC 
+            LIMIT $per_page OFFSET $offset";
     $logs = $db->fetchObjects( $sql, $binds );
 
     $nonce = yourls_create_nonce( 'mlv_db_nonce' );
@@ -379,10 +385,15 @@ HTML;
                 ? '<span class="mlv-badge mlv-badge-device">' . htmlspecialchars( $device_type ) . '</span>'
                 : '<span class="mlv-badge">' . htmlspecialchars( $device_type ) . '</span>';
 
+            $keyword_tooltip = '';
+            if ( !empty($log->long_url) || !empty($log->url_title) ) {
+                $keyword_tooltip = htmlspecialchars("Title: " . $log->url_title . "\nLong URL: " . $log->long_url);
+            }
+
             echo <<<HTML
             <tr>
                 <td style="white-space: nowrap;">$click_time</td>
-                <td><strong style="color:#4f46e5;">$keyword</strong></td>
+                <td><strong style="color:#4f46e5; cursor:help;" title="$keyword_tooltip">$keyword</strong></td>
                 <td><a href="https://ipinfo.io/$ip" target="_blank">$ip</a></td>
                 <td>$location_badge</td>
                 <td>
