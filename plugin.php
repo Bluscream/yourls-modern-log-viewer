@@ -37,6 +37,8 @@ function mlv_download_db() {
     $ch = curl_init( $url );
     curl_setopt( $ch, CURLOPT_FILE, $fp );
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+    curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 180 );
     
     $success = curl_exec( $ch );
