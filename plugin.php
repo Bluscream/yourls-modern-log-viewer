@@ -385,10 +385,18 @@ HTML;
                 ? '<span class="mlv-badge mlv-badge-device">' . htmlspecialchars( $device_type ) . '</span>'
                 : '<span class="mlv-badge">' . htmlspecialchars( $device_type ) . '</span>';
 
-            $keyword_tooltip = '';
-            if ( !empty($log->long_url) || !empty($log->url_title) ) {
-                $keyword_tooltip = htmlspecialchars("Title: " . $log->url_title . "\nLong URL: " . $log->long_url);
+            $long_url = !empty($log->long_url) ? trim($log->long_url) : '';
+            $url_title = !empty($log->url_title) ? trim($log->url_title) : '';
+            
+            $tooltip_text = '';
+            if ( !empty($long_url) && !empty($url_title) && $long_url !== $url_title ) {
+                $tooltip_text = "$url_title ($long_url)";
+            } elseif ( !empty($long_url) ) {
+                $tooltip_text = $long_url;
+            } elseif ( !empty($url_title) ) {
+                $tooltip_text = $url_title;
             }
+            $keyword_tooltip = htmlspecialchars($tooltip_text);
 
             echo <<<HTML
             <tr>
