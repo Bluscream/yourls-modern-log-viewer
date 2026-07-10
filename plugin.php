@@ -24,19 +24,31 @@ yourls_add_action( 'activated_modern-log-viewer/plugin.php', 'mlv_download_db' )
 
 function mlv_download_db() {
     $db_path = __DIR__ . '/GeoLite2-City.mmdb';
+    $temp_path = $db_path . '.tmp';
     // Public mirror link that doesn't require MaxMind license key
     $url = 'https://github.com/P3TERX/GeoLite.mmdb/releases/latest/download/GeoLite2-City.mmdb';
     
-    $ch = curl_init( $url );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    curl_setopt( $ch, CURLOPT_TIMEOUT, 90 );
-    $data = curl_exec( $ch );
-    curl_close( $ch );
+    $fp = fopen( $temp_path, 'w+' );
+    if ( !$fp ) {
+        return false;
+    }
     
-    if ( $data && strlen($data) > 1000000 ) {
-        file_put_contents( $db_path, $data );
+    $ch = curl_init( $url );
+    curl_setopt( $ch, CURLOPT_FILE, $fp );
+    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, 180 );
+    
+    $success = curl_exec( $ch );
+    curl_close( $ch );
+    fclose( $fp );
+    
+    if ( $success && file_exists( $temp_path ) && filesize( $temp_path ) > 1000000 ) {
+        rename( $temp_path, $db_path );
         return true;
+    }
+    
+    if ( file_exists( $temp_path ) ) {
+        unlink( $temp_path );
     }
     return false;
 }
