@@ -26,7 +26,7 @@ function mlv_download_db() {
     $db_path = __DIR__ . '/GeoLite2-City.mmdb';
     $temp_path = $db_path . '.tmp';
     // Public mirror link that doesn't require MaxMind license key
-    $url = 'https://github.com/P3TERX/GeoLite.mmdb/releases/latest/download/GeoLite2-City.mmdb';
+    $url = 'https://github.com/merkez/maxmind-databases/releases/latest/download/GeoLite2-City.mmdb';
     
     $fp = fopen( $temp_path, 'w+' );
     if ( !$fp ) {
@@ -39,6 +39,7 @@ function mlv_download_db() {
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
     curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
     curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
+    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 180 );
     
     $success = curl_exec( $ch );
