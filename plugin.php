@@ -95,8 +95,13 @@ function mlv_display_log_page() {
 
     // Auto download if not exists
     if ( !file_exists( $db_path ) ) {
-        echo '<div class="updated"><p>Downloading GeoLite2 City database in background, please refresh in a moment...</p></div>';
-        mlv_download_db();
+        $last_err = yourls_get_option( 'mlv_last_error' );
+        if ( $last_err ) {
+            echo '<div class="error"><p>Failed to download GeoLite2 database: ' . htmlspecialchars($last_err) . '</p></div>';
+        } else {
+            echo '<div class="updated"><p>Downloading GeoLite2 City database in background, please refresh in a moment...</p></div>';
+            mlv_download_db();
+        }
     }
 
     $reader = null;
@@ -108,9 +113,10 @@ function mlv_display_log_page() {
         }
     }
 
+    $is_writable = is_writable( __DIR__ ) ? 'Yes' : 'No';
     $db_status_html = file_exists( $db_path ) 
         ? '<span style="color:green;font-weight:bold;">Available (' . round(filesize($db_path) / 1024 / 1024, 2) . ' MB)</span>'
-        : '<span style="color:red;font-weight:bold;">Not Available</span>';
+        : '<span style="color:red;font-weight:bold;">Not Available</span> (Writable: ' . $is_writable . ')';
 
     // Pagination & Search parameters
     $page = isset( $_GET['pg'] ) ? max( 1, (int)$_GET['pg'] ) : 1;
