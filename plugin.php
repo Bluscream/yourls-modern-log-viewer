@@ -30,6 +30,7 @@ function mlv_download_db() {
     
     $fp = fopen( $temp_path, 'w+' );
     if ( !$fp ) {
+        error_log( "Modern Log Viewer: Cannot open file for writing: " . $temp_path . ". Check directory permissions of " . __DIR__ );
         return false;
     }
     
@@ -39,6 +40,7 @@ function mlv_download_db() {
     curl_setopt( $ch, CURLOPT_TIMEOUT, 180 );
     
     $success = curl_exec( $ch );
+    $curl_error = curl_error( $ch );
     curl_close( $ch );
     fclose( $fp );
     
@@ -46,6 +48,8 @@ function mlv_download_db() {
         rename( $temp_path, $db_path );
         return true;
     }
+    
+    error_log( "Modern Log Viewer: Download failed. cURL Success: " . ($success ? 'Yes' : 'No') . ", cURL Error: " . $curl_error . ", Temp File Size: " . (file_exists($temp_path) ? filesize($temp_path) : 'none') );
     
     if ( file_exists( $temp_path ) ) {
         unlink( $temp_path );
