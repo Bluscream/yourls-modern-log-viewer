@@ -168,6 +168,10 @@ function mlv_display_log_page() {
     // Style sheets for table
     echo <<<HTML
     <style>
+        #wrap {
+            max-width: 98% !important;
+            width: 98% !important;
+        }
         .mlv-container {
             margin-top: 20px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -315,21 +319,34 @@ HTML;
             // Resolve Location via MaxMind GeoLite2
             $country = 'Unknown';
             $city = '';
-            if ( $reader && filter_var( $log->ip_address, FILTER_VALIDATE_IP ) ) {
-                try {
-                    $record = $reader->get( $log->ip_address );
-                    if ( isset( $record['country']['names']['en'] ) ) {
-                        $country = $record['country']['names']['en'];
+            $debug_info = '';
+            if ( $reader ) {
+                if ( filter_var( $log->ip_address, FILTER_VALIDATE_IP ) ) {
+                    try {
+                        $record = $reader->get( $log->ip_address );
+                        if ( $record ) {
+                            if ( isset( $record['country']['names']['en'] ) ) {
+                                $country = $record['country']['names']['en'];
+                            }
+                            if ( isset( $record['city']['names']['en'] ) ) {
+                                $city = $record['city']['names']['en'];
+                            }
+                        } else {
+                            $debug_info = 'Record is empty/null';
+                        }
+                    } catch ( Exception $e ) {
+                        $debug_info = 'Exception: ' . $e->getMessage();
                     }
-                    if ( isset( $record['city']['names']['en'] ) ) {
-                        $city = $record['city']['names']['en'];
-                    }
-                } catch ( Exception $e ) {}
+                } else {
+                    $debug_info = 'Invalid IP filter';
+                }
+            } else {
+                $debug_info = 'Reader is null';
             }
             $location_str = !empty( $city ) ? "$city, $country" : $country;
             $location_badge = $country !== 'Unknown' 
                 ? '<span class="mlv-badge mlv-badge-geo">' . htmlspecialchars( $location_str ) . '</span>'
-                : '<span class="mlv-badge">' . htmlspecialchars( $location_str ) . '</span>';
+                : '<span class="mlv-badge" title="' . htmlspecialchars($debug_info) . '">' . htmlspecialchars( $location_str ) . '</span>';
 
             // Parse User Agent via WhichBrowser
             $browser_desc = 'Unknown';
