@@ -25,12 +25,32 @@ yourls_add_action( 'activated_modern-log-viewer/plugin.php', 'mlv_download_db' )
 function mlv_download_db() {
     $db_path = __DIR__ . '/GeoLite2-City.mmdb';
     $temp_path = $db_path . '.tmp';
-    // Public mirror link that doesn't require MaxMind license key
-    $url = 'https://github.com/merkez/maxmind-databases/releases/latest/download/GeoLite2-City.mmdb';
     
+    $primary_url = 'https://github.com/merkez/maxmind-databases/releases/latest/download/GeoLite2-City.mmdb';
+    $fallback_url = 'https://github.com/P3TERX/GeoLite.mmdb/releases/latest/download/GeoLite2-City.mmdb';
+    
+    $success = mlv_curl_download( $primary_url, $temp_path );
+    
+    if ( !$success ) {
+        error_log( "Modern Log Viewer: Primary download failed. Trying fallback..." );
+        $success = mlv_curl_download( $fallback_url, $temp_path );
+    }
+    
+    if ( $success && file_exists( $temp_path ) && filesize( $temp_path ) > 1000000 ) {
+        rename( $temp_path, $db_path );
+        return true;
+    }
+    
+    if ( file_exists( $temp_path ) ) {
+        unlink( $temp_path );
+    }
+    return false;
+}
+
+function mlv_curl_download( $url, $temp_path ) {
     $fp = fopen( $temp_path, 'w+' );
     if ( !$fp ) {
-        error_log( "Modern Log Viewer: Cannot open file for writing: " . $temp_path . ". Check directory permissions of " . __DIR__ );
+        error_log( "Modern Log Viewer: Cannot open file for writing: " . $temp_path . ". Check directory permissions." );
         return false;
     }
     
@@ -48,15 +68,10 @@ function mlv_download_db() {
     fclose( $fp );
     
     if ( $success && file_exists( $temp_path ) && filesize( $temp_path ) > 1000000 ) {
-        rename( $temp_path, $db_path );
         return true;
     }
     
-    error_log( "Modern Log Viewer: Download failed. cURL Success: " . ($success ? 'Yes' : 'No') . ", cURL Error: " . $curl_error . ", Temp File Size: " . (file_exists($temp_path) ? filesize($temp_path) : 'none') );
-    
-    if ( file_exists( $temp_path ) ) {
-        unlink( $temp_path );
-    }
+    error_log( "Modern Log Viewer: Download from $url failed. cURL Success: " . ($success ? 'Yes' : 'No') . ", cURL Error: " . $curl_error . ", Temp File Size: " . (file_exists($temp_path) ? filesize($temp_path) : 'none') );
     return false;
 }
 
