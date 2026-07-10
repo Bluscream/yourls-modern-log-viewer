@@ -319,6 +319,7 @@ HTML;
             // Resolve Location via MaxMind GeoLite2
             $country = 'Unknown';
             $city = '';
+            $country_code = '';
             $debug_info = '';
             if ( $reader ) {
                 if ( filter_var( $log->ip_address, FILTER_VALIDATE_IP ) ) {
@@ -330,6 +331,9 @@ HTML;
                             }
                             if ( isset( $record['city']['names']['en'] ) ) {
                                 $city = $record['city']['names']['en'];
+                            }
+                            if ( isset( $record['country']['iso_code'] ) ) {
+                                $country_code = strtolower( $record['country']['iso_code'] );
                             }
                         } else {
                             $debug_info = 'Record is empty/null';
@@ -344,8 +348,14 @@ HTML;
                 $debug_info = 'Reader is null';
             }
             $location_str = !empty( $city ) ? "$city, $country" : $country;
+            
+            $flag_html = '';
+            if ( !empty( $country_code ) ) {
+                $flag_html = '<img src="https://flagcdn.com/16x12/' . htmlspecialchars( $country_code ) . '.png" width="16" height="12" alt="' . htmlspecialchars($country) . '" style="margin-right: 6px; vertical-align: middle; border-radius:1px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);">';
+            }
+            
             $location_badge = $country !== 'Unknown' 
-                ? '<span class="mlv-badge mlv-badge-geo">' . htmlspecialchars( $location_str ) . '</span>'
+                ? '<span class="mlv-badge mlv-badge-geo" style="display: inline-flex; align-items: center;">' . $flag_html . htmlspecialchars( $location_str ) . '</span>'
                 : '<span class="mlv-badge" title="' . htmlspecialchars($debug_info) . '">' . htmlspecialchars( $location_str ) . '</span>';
 
             // Parse User Agent via WhichBrowser
